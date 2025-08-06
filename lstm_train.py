@@ -14,7 +14,7 @@ y_PATH = 'data/y.npy'
 MODEL_DIR = 'models'
 MODEL_PATH = os.path.join(MODEL_DIR, 'lstm_fall_model.h5')
 PLOT_PATH = os.path.join(MODEL_DIR, 'training_plot.png')
-EPOCHS = 70
+EPOCHS = 40
 BATCH_SIZE = 32
 
 # === 確保模型資料夾存在 ===
