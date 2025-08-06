@@ -3,59 +3,77 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.layers import LSTM, Dense, Masking
 from tensorflow.keras.callbacks import ModelCheckpoint
 
-# === 路徑設定 ===
-X_PATH = 'data/X.npy'
-y_PATH = 'data/y.npy'
-MODEL_DIR = 'models'
-MODEL_PATH = os.path.join(MODEL_DIR, 'lstm_fall_model.h5')
-PLOT_PATH = os.path.join(MODEL_DIR, 'training_plot.png')
-EPOCHS = 40
-BATCH_SIZE = 32
+# === 參數設定 ===
+DATA_DIR = 'data'  # 資料夾路徑（內含 .npy 和 labels.csv）
+LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
+MAX_SEQ_LEN = 160
+FEATURE_DIM = 34  # 若有 confidence 則改為 51
 
-# === 確保模型資料夾存在 ===
-os.makedirs(MODEL_DIR, exist_ok=True)
+# === 讀取 labels.csv ===
+df = pd.read_csv(LABEL_CSV)
 
-# === 載入資料 ===
-X = np.load(X_PATH)
-y = np.load(y_PATH)
+X_list, y_list = [], []
 
-print("✅ Loaded data:", X.shape, y.shape)
+for _, row in df.iterrows():
+    filename = row['filename'] + '.npy'
+    label = row['label']
+    path = os.path.join(DATA_DIR, filename)
 
-# === 分類標籤處理 ===
-y = to_categorical(y, num_classes=2)  # 二分類
+    if os.path.exists(path):
+        arr = np.load(path)
+        X_list.append(arr)
+        y_list.append(label)
+    else:
+        print(f"⚠️ 找不到檔案: {path}")
 
-# === 切分訓練與驗證集 ===
+# === 補齊時間長度
+X = pad_sequences(X_list, maxlen=MAX_SEQ_LEN, dtype='float32', padding='post', truncating='post')
+y = np.array(y_list)
+
+# === 切分訓練與驗證資料
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# === 模型建立 ===
-model = Sequential()
-model.add(LSTM(64, input_shape=(X.shape[1], X.shape[2]), return_sequences=False))
-model.add(Dropout(0.5))
-model.add(Dense(32, activation='relu'))
-model.add(Dense(2, activation='softmax'))  # 2 分類
+# === 建立 LSTM 模型
+model = Sequential([
+    Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
+    LSTM(64),
+    Dense(32, activation='relu'),
+    Dense(1, activation='sigmoid')
+])
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-# === 模型訓練 ===
-checkpoint = ModelCheckpoint(MODEL_PATH, monitor='val_accuracy', save_best_only=True, verbose=1)
+# === 建立 models 資料夾
+os.makedirs('models', exist_ok=True)
+
+# === 模型儲存 Checkpoint
+checkpoint = ModelCheckpoint('models/best_model.h5', save_best_only=True, monitor='val_loss', mode='min')
+
+# === 訓練模型
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=EPOCHS,
-    batch_size=BATCH_SIZE,
-    callbacks=[checkpoint],
-    verbose=1
+    epochs=40,
+    batch_size=32,
+    callbacks=[checkpoint]
 )
 
-# === 繪製訓練曲線 ===
+# === 儲存最終模型
+model.save('models/fall_lstm_model_final.h5')
+
+# === 評估
+loss, acc = model.evaluate(X_val, y_val)
+print(f"✅ 評估準確率：{acc:.4f}")
+
+# === 畫訓練圖
 plt.figure(figsize=(12, 5))
 
-# Loss
+# Loss 圖
 plt.subplot(1, 2, 1)
 plt.plot(history.history['loss'], label='Train Loss')
 plt.plot(history.history['val_loss'], label='Val Loss')
@@ -64,7 +82,7 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend()
 
-# Accuracy
+# Accuracy 圖
 plt.subplot(1, 2, 2)
 plt.plot(history.history['accuracy'], label='Train Acc')
 plt.plot(history.history['val_accuracy'], label='Val Acc')
@@ -74,8 +92,5 @@ plt.ylabel('Accuracy')
 plt.legend()
 
 plt.tight_layout()
-plt.savefig(PLOT_PATH)
-plt.show()
-
-print(f"✅ Model saved to {MODEL_PATH}")
-print(f"📈 Training plot saved to {PLOT_PATH}")
+plt.savefig('models/training_plot.png')
+plt.close()
