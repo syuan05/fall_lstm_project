@@ -49,7 +49,7 @@ model = Sequential([
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 # === 建立 models 資料夾
-os.makedirs('models', exist_ok=True)
+os.makedirs('models_200rounds', exist_ok=True)
 
 # === 模型儲存 Checkpoint
 checkpoint = ModelCheckpoint('models/best_model.h5', save_best_only=True, monitor='val_loss', mode='min')
@@ -58,7 +58,7 @@ checkpoint = ModelCheckpoint('models/best_model.h5', save_best_only=True, monito
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=40,
+    epochs=200,
     batch_size=32,
     callbacks=[checkpoint]
 )
