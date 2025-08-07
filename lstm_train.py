@@ -13,7 +13,7 @@ DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
 MAX_SEQ_LEN = 160
 FEATURE_DIM = 51  # 若有 confidence 則改為 51
-MODEL_DIR = 'models_1500rounds'
+MODEL_DIR = 'models_1000rounds'
 
 # === 讀取標籤資料 ===
 df = pd.read_csv(LABEL_CSV)
@@ -53,7 +53,7 @@ checkpoint = ModelCheckpoint(os.path.join(MODEL_DIR, 'best_model.h5'), save_best
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=1500,  # ✅ 你可以改這邊的回合數
+    epochs=1000,  # ✅ 你可以改這邊的回合數
     batch_size=32,
     callbacks=[checkpoint]
 )
