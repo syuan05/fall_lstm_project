@@ -9,62 +9,57 @@ from tensorflow.keras.layers import LSTM, Dense, Masking
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 # === 參數設定 ===
-DATA_DIR = 'data'  # 資料夾路徑（內含 .npy 和 labels.csv）
+DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
 MAX_SEQ_LEN = 160
-FEATURE_DIM = 34  # 若有 confidence 則改為 51
+FEATURE_DIM = 51  # 若有 confidence 則改為 51
+MODEL_DIR = 'models_1500rounds'
 
-# === 讀取 labels.csv ===
+# === 讀取標籤資料 ===
 df = pd.read_csv(LABEL_CSV)
-
 X_list, y_list = [], []
 
 for _, row in df.iterrows():
-    filename = row['filename'] + '.npy'
-    label = row['label']
-    path = os.path.join(DATA_DIR, filename)
-
+    path = os.path.join(DATA_DIR, row['filename'] + '.npy')
     if os.path.exists(path):
         arr = np.load(path)
         X_list.append(arr)
-        y_list.append(label)
+        y_list.append(row['label'])
     else:
         print(f"⚠️ 找不到檔案: {path}")
 
-# === 補齊時間長度
+# === 補齊長度並轉為 numpy 陣列
 X = pad_sequences(X_list, maxlen=MAX_SEQ_LEN, dtype='float32', padding='post', truncating='post')
 y = np.array(y_list)
 
-# === 切分訓練與驗證資料
+# === 切分訓練/驗證集
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# === 建立 LSTM 模型
+# === 建立模型
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
     LSTM(64),
     Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
-
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-# === 建立 models 資料夾
-os.makedirs('models_200rounds', exist_ok=True)
-
-# === 模型儲存 Checkpoint
-checkpoint = ModelCheckpoint('models/best_model.h5', save_best_only=True, monitor='val_loss', mode='min')
+# === 建立儲存資料夾
+os.makedirs(MODEL_DIR, exist_ok=True)
 
 # === 訓練模型
+checkpoint = ModelCheckpoint(os.path.join(MODEL_DIR, 'best_model.h5'), save_best_only=True, monitor='val_loss', mode='min')
+
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=00,
+    epochs=1500,  # ✅ 你可以改這邊的回合數
     batch_size=32,
     callbacks=[checkpoint]
 )
 
 # === 儲存最終模型
-model.save('models/fall_lstm_model_final.h5')
+model.save(os.path.join(MODEL_DIR, 'fall_lstm_model_final.h5'))
 
 # === 評估
 loss, acc = model.evaluate(X_val, y_val)
@@ -92,5 +87,5 @@ plt.ylabel('Accuracy')
 plt.legend()
 
 plt.tight_layout()
-plt.savefig('models/training_plot.png')
+plt.savefig(os.path.join(MODEL_DIR, 'training_plot.png'))
 plt.close()
