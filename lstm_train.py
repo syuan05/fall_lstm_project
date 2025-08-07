@@ -58,7 +58,7 @@ checkpoint = ModelCheckpoint('models/best_model.h5', save_best_only=True, monito
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=200,
+    epochs=00,
     batch_size=32,
     callbacks=[checkpoint]
 )
