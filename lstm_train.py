@@ -15,7 +15,7 @@ DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
 MAX_SEQ_LEN = 160
 FEATURE_DIM = 51  # 若有 confidence 則改為 51
-MODEL_DIR = 'models_0814_GUR_100rounds'
+MODEL_DIR = 'models_0814_GUR_300rounds'
 
 # === 讀取標籤資料 ===
 df = pd.read_csv(LABEL_CSV)
@@ -58,7 +58,7 @@ checkpoint = ModelCheckpoint(os.path.join(MODEL_DIR, 'best_model.keras'), save_b
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=100,  # ✅ 你可以改這邊的回合數
+    epochs=300,  # ✅ 你可以改這邊的回合數
     batch_size=32,
     callbacks=[checkpoint]
 )
