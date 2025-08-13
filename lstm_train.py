@@ -47,6 +47,8 @@ model = Sequential([
     Dense(1, activation='sigmoid')
 ])
 
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
 # === 建立儲存資料夾
 os.makedirs(MODEL_DIR, exist_ok=True)
 
