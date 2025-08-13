@@ -56,7 +56,7 @@ checkpoint = ModelCheckpoint(os.path.join(MODEL_DIR, 'best_model.h5'), save_best
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=1000,  # ✅ 你可以改這邊的回合數
+    epochs=40,  # ✅ 你可以改這邊的回合數
     batch_size=32,
     callbacks=[checkpoint]
 )
