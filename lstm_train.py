@@ -7,11 +7,12 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Masking
 from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.layers import GRU, Dropout
 
 # === 參數設定 ===
 DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
-MAX_SEQ_LEN = 160
+MAX_SEQ_LEN = 120
 FEATURE_DIM = 51  # 若有 confidence 則改為 51
 MODEL_DIR = 'models_1000rounds'
 
@@ -38,8 +39,10 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_st
 # === 建立模型
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
-    LSTM(64),
-    Dense(32, activation='relu'),
+    LSTM(64, return_sequences=True),
+    Dropout(0.3),
+    LSTM(32),
+    Dense(16, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
