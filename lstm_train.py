@@ -15,7 +15,7 @@ DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
 MAX_SEQ_LEN = 160
 FEATURE_DIM = 51  # 若有 confidence 則改為 51
-MODEL_DIR = 'models_300rounds'
+MODEL_DIR = 'models_0814_GUR_100rounds'
 
 # === 讀取標籤資料 ===
 df = pd.read_csv(LABEL_CSV)
