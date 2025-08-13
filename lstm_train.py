@@ -53,7 +53,7 @@ model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # === 訓練模型
-checkpoint = ModelCheckpoint(os.path.join(MODEL_DIR, 'best_model.h5'), save_best_only=True, monitor='val_loss', mode='min')
+checkpoint = ModelCheckpoint(os.path.join(MODEL_DIR, 'best_model.keras'), save_best_only=True, monitor='val_loss', mode='min')
 
 history = model.fit(
     X_train, y_train,
@@ -64,7 +64,7 @@ history = model.fit(
 )
 
 # === 儲存最終模型
-model.save(os.path.join(MODEL_DIR, 'fall_lstm_model_final.h5'))
+model.save(os.path.join(MODEL_DIR, 'fall_lstm_model_final.keras'))
 
 # === 評估
 loss, acc = model.evaluate(X_val, y_val)
