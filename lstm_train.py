@@ -7,14 +7,15 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Masking
 from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import GRU, Dropout
+from tensorflow.keras.layers import GRU
+from tensorflow.keras.layers import Dropout
 
 # === 參數設定 ===
 DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
-MAX_SEQ_LEN = 60
+MAX_SEQ_LEN = 160
 FEATURE_DIM = 51  # 若有 confidence 則改為 51
-MODEL_DIR = 'models_double_300'
+MODEL_DIR = 'models_300rounds'
 
 # === 讀取標籤資料 ===
 df = pd.read_csv(LABEL_CSV)
@@ -39,13 +40,12 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_st
 # === 建立模型
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
-    LSTM(64, return_sequences=True),
+    GRU(64, return_sequences=True),
     Dropout(0.3),
-    LSTM(32),
-    Dense(16, activation='relu'),
+    GRU(32),
+    Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 # === 建立儲存資料夾
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -56,8 +56,8 @@ checkpoint = ModelCheckpoint(os.path.join(MODEL_DIR, 'best_model.h5'), save_best
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=300,  # ✅ 你可以改這邊的回合數
-    batch_size=64,
+    epochs=100,  # ✅ 你可以改這邊的回合數
+    batch_size=32,
     callbacks=[checkpoint]
 )
 
