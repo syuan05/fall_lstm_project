@@ -77,9 +77,13 @@ history = model.fit(
     validation_data=(X_val, y_val),
     epochs=EPOCHS,
     batch_size=BATCH_SIZE,
-    # callbacks=[checkpoint, early_stop],
+    callbacks=[checkpoint, early_stop],
     verbose=1
 )
+
+final_model_path = os.path.join(MODEL_DIR, f'{MODEL_NAME}_final.keras')
+model.save(final_model_path)
+print(f"💾 最終模型已儲存至：{final_model_path}")
 
 # ==================== 評估與輸出 ====================
 loss, acc = model.evaluate(X_val, y_val)
@@ -89,9 +93,9 @@ print(f"\n✅ 驗證準確率：{acc:.4f} | 驗證損失：{loss:.4f}")
 y_pred_prob = model.predict(X_val)
 y_pred = (y_pred_prob > 0.5).astype(int).flatten()
 
-cm = confusion_matrix(y_val, y_pred)
+cm = confusion_matrix(y_val, y_pred, normalize='true')
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Normal', 'Fall'])
-disp.plot(cmap=plt.cm.Blues)
+disp.plot(cmap=plt.cm.Blues, values_format=".2f")
 plt.title(f'Confusion Matrix - {MODEL_NAME}')
 plt.savefig(os.path.join(MODEL_DIR, f'{MODEL_NAME}_confusion_matrix.png'))
 plt.close()
@@ -131,3 +135,4 @@ plt.close()
 print("\n📊 訓練結果摘要：")
 print(report_df[['precision', 'recall', 'f1-score', 'support']])
 print(f"\n📈 訓練曲線與混淆矩陣已儲存至：{MODEL_DIR}")
+
