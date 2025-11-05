@@ -1,5 +1,5 @@
 
-# 消融實驗組別：A2
+# 消融實驗組別：A1
 import os
 import numpy as np
 import pandas as pd
@@ -14,7 +14,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 # ==================== 基本參數設定 ====================
 DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
-MODEL_DIR = 'models_baseline'
+MODEL_DIR = 'A1'
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # === 超參數設定（可作為後續消融基準）===
@@ -23,7 +23,7 @@ FEATURE_DIM = 51          # 若不含 confidence 改為 34
 EPOCHS = 300
 BATCH_SIZE = 32
 DROPOUT_RATE = 0.3
-MODEL_NAME = 'baseline'
+MODEL_NAME = 'A1'
 
 # ==================== 讀取資料 ====================
 df = pd.read_csv(LABEL_CSV)
@@ -49,9 +49,7 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_st
 # ==================== 模型架構 ====================
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
-    LSTM(64, return_sequences=True),
-    Dropout(DROPOUT_RATE),
-    LSTM(32),
+    LSTM(64),                        # 🔸 只有一層 LSTM
     Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
