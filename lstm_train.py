@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report, ConfusionMatrixDisplay
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout, Masking
+from tensorflow.keras.layers import LSTM, Dense, Dropout, Masking, GRU
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 
 # ==================== 基本參數設定 ====================
@@ -58,8 +58,8 @@ print(f"資料集比例：Train={len(X_train)}, Val={len(X_val)}, Test={len(X_te
 # ==================== 模型架構（雙層 LSTM） ====================
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
-    LSTM(128, return_sequences=True),
-    LSTM(64),
+    GRU(64, return_sequences=True),
+    GRU(32),
     Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
