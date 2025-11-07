@@ -1,4 +1,4 @@
-# 消融實驗組別：A1（雙層 LSTM + train/val/test 8:1:1）
+# 消融實驗組別：A3（雙層 LSTM + train/val/test 8:1:1）
 import os
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 # ==================== 基本參數設定 ====================
 DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
-MODEL_DIR = 'A1'
+MODEL_DIR = 'A3'
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # === 超參數設定 ===
@@ -22,7 +22,7 @@ FEATURE_DIM = 51          # 若不含 confidence 改為 34
 EPOCHS = 300
 BATCH_SIZE = 32
 DROPOUT_RATE = 0.3
-MODEL_NAME = 'A1'
+MODEL_NAME = 'A3'
 
 # ==================== 讀取資料 ====================
 df = pd.read_csv(LABEL_CSV)
@@ -58,6 +58,7 @@ print(f"資料集比例：Train={len(X_train)}, Val={len(X_val)}, Test={len(X_te
 # ==================== 模型架構（雙層 LSTM） ====================
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
+    LSTM(128, return_sequences=True),
     LSTM(64),
     Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
