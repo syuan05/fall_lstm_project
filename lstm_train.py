@@ -1,5 +1,4 @@
-
-# 消融實驗組別：A1
+# 消融實驗組別：A1（雙層 LSTM + train/val/test 8:1:1）
 import os
 import numpy as np
 import pandas as pd
@@ -14,16 +13,16 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 # ==================== 基本參數設定 ====================
 DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
-MODEL_DIR = 'A1'
+MODEL_DIR = 'A2_Baseline'
 os.makedirs(MODEL_DIR, exist_ok=True)
 
-# === 超參數設定（可作為後續消融基準）===
+# === 超參數設定 ===
 MAX_SEQ_LEN = 160
 FEATURE_DIM = 51          # 若不含 confidence 改為 34
 EPOCHS = 300
 BATCH_SIZE = 32
 DROPOUT_RATE = 0.3
-MODEL_NAME = 'A1'
+MODEL_NAME = 'A2_Baseline'
 
 # ==================== 讀取資料 ====================
 df = pd.read_csv(LABEL_CSV)
@@ -43,13 +42,25 @@ for _, row in df.iterrows():
 X = pad_sequences(X_list, maxlen=MAX_SEQ_LEN, dtype='float32', padding='post', truncating='post')
 y = np.array(y_list)
 
-# === 切分訓練 / 驗證集 ===
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+# ==================== 切分資料集 ====================
+# 第一次：分出 test（10%）
+X_temp, X_test, y_temp, y_test = train_test_split(
+    X, y, test_size=0.1, random_state=42, stratify=y
+)
+# 第二次：從剩下 90% 中再切出 val（10% of total）
+X_train, X_val, y_train, y_val = train_test_split(
+    X_temp, y_temp, test_size=0.1111, random_state=42, stratify=y_temp
+)
+# (0.9 × 0.1111 ≈ 0.1 → 80/10/10)
 
-# ==================== 模型架構 ====================
+print(f"資料集比例：Train={len(X_train)}, Val={len(X_val)}, Test={len(X_test)}")
+
+# ==================== 模型架構（雙層 LSTM） ====================
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
-    LSTM(64),                        # 🔸 只有一層 LSTM
+    LSTM(64, return_sequences=True),
+    Dropout(DROPOUT_RATE),
+    LSTM(32),
     Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
@@ -62,11 +73,8 @@ checkpoint = ModelCheckpoint(
     os.path.join(MODEL_DIR, f'{MODEL_NAME}_best.keras'),
     save_best_only=True, monitor='val_loss', mode='min'
 )
-
 early_stop = EarlyStopping(
-    monitor='val_loss',
-    patience=30,
-    restore_best_weights=True
+    monitor='val_loss', patience=30, restore_best_weights=True
 )
 
 # ==================== 訓練模型 ====================
@@ -75,7 +83,7 @@ history = model.fit(
     validation_data=(X_val, y_val),
     epochs=EPOCHS,
     batch_size=BATCH_SIZE,
-    callbacks=[checkpoint, early_stop],
+    callbacks=[checkpoint],
     verbose=1
 )
 
@@ -83,29 +91,33 @@ final_model_path = os.path.join(MODEL_DIR, f'{MODEL_NAME}_final.keras')
 model.save(final_model_path)
 print(f"💾 最終模型已儲存至：{final_model_path}")
 
-# ==================== 評估與輸出 ====================
-loss, acc = model.evaluate(X_val, y_val)
-print(f"\n✅ 驗證準確率：{acc:.4f} | 驗證損失：{loss:.4f}")
+# ==================== 驗證集評估 ====================
+val_loss, val_acc = model.evaluate(X_val, y_val)
+print(f"\n✅ 驗證準確率：{val_acc:.4f} | 驗證損失：{val_loss:.4f}")
 
-# === 混淆矩陣 ===
-y_pred_prob = model.predict(X_val)
+# ==================== 測試集評估 ====================
+test_loss, test_acc = model.evaluate(X_test, y_test)
+print(f"🧪 測試準確率：{test_acc:.4f} | 測試損失：{test_loss:.4f}")
+
+# ==================== 混淆矩陣（Test） ====================
+y_pred_prob = model.predict(X_test)
 y_pred = (y_pred_prob > 0.5).astype(int).flatten()
 
-cm = confusion_matrix(y_val, y_pred, normalize='true')
+cm = confusion_matrix(y_test, y_pred, normalize='true')
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Normal', 'Fall'])
 disp.plot(cmap=plt.cm.Blues, values_format=".2f")
-plt.title(f'Confusion Matrix - {MODEL_NAME}')
-plt.savefig(os.path.join(MODEL_DIR, f'{MODEL_NAME}_confusion_matrix.png'))
+plt.title(f'Confusion Matrix - {MODEL_NAME} (Test)')
+plt.savefig(os.path.join(MODEL_DIR, f'{MODEL_NAME}_confusion_matrix_test.png'))
 plt.close()
 
-# === 分類報告 ===
-report = classification_report(y_val, y_pred, target_names=['Normal', 'Fall'], output_dict=True)
+# ==================== 分類報告（Test） ====================
+report = classification_report(y_test, y_pred, target_names=['Normal', 'Fall'], output_dict=True)
 report_df = pd.DataFrame(report).transpose()
-report_path = os.path.join(MODEL_DIR, f'{MODEL_NAME}_classification_report.csv')
+report_path = os.path.join(MODEL_DIR, f'{MODEL_NAME}_classification_report_test.csv')
 report_df.to_csv(report_path, index=True)
-print(f"📄 分類報告已儲存：{report_path}")
+print(f"📄 測試分類報告已儲存：{report_path}")
 
-# === 繪製訓練曲線 ===
+# ==================== 繪製訓練曲線 ====================
 plt.figure(figsize=(12, 5))
 
 plt.subplot(1, 2, 1)
@@ -129,8 +141,7 @@ plot_path = os.path.join(MODEL_DIR, f'{MODEL_NAME}_training_plot.png')
 plt.savefig(plot_path)
 plt.close()
 
-# === 輸出摘要結果 ===
-print("\n📊 訓練結果摘要：")
+# ==================== 輸出摘要 ====================
+print("\n📊 測試結果摘要：")
 print(report_df[['precision', 'recall', 'f1-score', 'support']])
 print(f"\n📈 訓練曲線與混淆矩陣已儲存至：{MODEL_DIR}")
-
