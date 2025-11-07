@@ -13,7 +13,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 # ==================== 基本參數設定 ====================
 DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
-MODEL_DIR = 'A2_Baseline'
+MODEL_DIR = 'A1'
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # === 超參數設定 ===
@@ -22,7 +22,7 @@ FEATURE_DIM = 51          # 若不含 confidence 改為 34
 EPOCHS = 300
 BATCH_SIZE = 32
 DROPOUT_RATE = 0.3
-MODEL_NAME = 'A2_Baseline'
+MODEL_NAME = 'A1'
 
 # ==================== 讀取資料 ====================
 df = pd.read_csv(LABEL_CSV)
