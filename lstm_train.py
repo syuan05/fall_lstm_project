@@ -58,9 +58,7 @@ print(f"資料集比例：Train={len(X_train)}, Val={len(X_val)}, Test={len(X_te
 # ==================== 模型架構（雙層 LSTM） ====================
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
-    LSTM(64, return_sequences=True),
-    Dropout(DROPOUT_RATE),
-    LSTM(32),
+    LSTM(64),
     Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
