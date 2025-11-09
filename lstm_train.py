@@ -1,4 +1,4 @@
-# 消融實驗組別：A2
+# 消融實驗組別：A2（Baseline, MAX_SEQ_LEN=144, y軸統一 0~1）
 import os
 import numpy as np
 import pandas as pd
@@ -110,23 +110,27 @@ report_path = os.path.join(MODEL_DIR, f'{MODEL_NAME}_classification_report.csv')
 report_df.to_csv(report_path, index=True)
 print(f"📄 測試分類報告已儲存：{report_path}")
 
-# ==================== 繪製訓練曲線 ====================
+# ==================== 繪製訓練曲線（統一 y 軸 0~1） ====================
 plt.figure(figsize=(12, 5))
 
+# Loss 曲線
 plt.subplot(1, 2, 1)
 plt.plot(history.history['loss'], label='Train Loss')
 plt.plot(history.history['val_loss'], label='Val Loss')
 plt.title(f'{MODEL_NAME} - Loss Curve')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
+plt.ylim(0, 1)  # ✅ 統一 y 軸範圍
 plt.legend()
 
+# Accuracy 曲線
 plt.subplot(1, 2, 2)
 plt.plot(history.history['accuracy'], label='Train Accuracy')
 plt.plot(history.history['val_accuracy'], label='Val Accuracy')
 plt.title(f'{MODEL_NAME} - Accuracy Curve')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
+plt.ylim(0, 1)  # ✅ 統一 y 軸範圍
 plt.legend()
 
 plt.tight_layout()
