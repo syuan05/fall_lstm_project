@@ -73,7 +73,6 @@ checkpoint = ModelCheckpoint(
 early_stop = EarlyStopping(
     monitor='val_loss', patience=30, restore_best_weights=True
 )
-# 🔹 新增 CSVLogger：紀錄每個 epoch 的訓練結果
 csv_logger = CSVLogger(os.path.join(MODEL_DIR, f'{MODEL_NAME}_training_log.csv'))
 
 # ==================== 訓練模型 ====================
@@ -82,7 +81,7 @@ history = model.fit(
     validation_data=(X_val, y_val),
     epochs=EPOCHS,
     batch_size=BATCH_SIZE,
-    callbacks=[checkpoint, csv_logger],  # 🔹 加入 csv_logger
+    callbacks=[checkpoint, csv_logger],
     verbose=1
 )
 
@@ -91,7 +90,7 @@ final_model_path = os.path.join(MODEL_DIR, f'{MODEL_NAME}_final.keras')
 model.save(final_model_path)
 print(f"💾 最終模型已儲存至：{final_model_path}")
 
-# 🔹 儲存訓練歷史（JSON + CSV）
+# 儲存訓練歷史（JSON + CSV）
 history_path_json = os.path.join(MODEL_DIR, f'{MODEL_NAME}_history.json')
 with open(history_path_json, 'w') as f:
     json.dump(history.history, f, indent=4)
@@ -106,6 +105,15 @@ print(f"\n✅ 驗證準確率：{val_acc:.4f} | 驗證損失：{val_loss:.4f}")
 
 test_loss, test_acc = model.evaluate(X_test, y_test)
 print(f"🧪 測試準確率：{test_acc:.4f} | 測試損失：{test_loss:.4f}")
+
+# 儲存 train/val/test 結果摘要
+final_results_path = os.path.join(MODEL_DIR, f'{MODEL_NAME}_final_results.csv')
+with open(final_results_path, 'w') as f:
+    f.write('dataset,loss,accuracy\n')
+    f.write(f'train,{history.history["loss"][-1]:.6f},{history.history["accuracy"][-1]:.6f}\n')
+    f.write(f'val,{history.history["val_loss"][-1]:.6f},{history.history["val_accuracy"][-1]:.6f}\n')
+    f.write(f'test,{test_loss:.6f},{test_acc:.6f}\n')
+print(f"📄 最終結果已儲存：{final_results_path}")
 
 # ==================== 混淆矩陣（Test） ====================
 y_pred_prob = model.predict(X_test)
@@ -156,4 +164,4 @@ plt.close()
 # ==================== 輸出摘要 ====================
 print("\n📊 測試結果摘要：")
 print(report_df[['precision', 'recall', 'f1-score', 'support']])
-print(f"\n📈 訓練曲線、分類報告、混淆矩陣與歷史紀錄已儲存至：{MODEL_DIR}")
+print(f"\n📈 訓練曲線、分類報告、混淆矩陣、最終結果與歷史紀錄已儲存至：{MODEL_DIR}")
