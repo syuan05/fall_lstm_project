@@ -69,9 +69,6 @@ checkpoint = ModelCheckpoint(
     os.path.join(MODEL_DIR, f'{MODEL_NAME}_best.keras'),
     save_best_only=True, monitor='val_loss', mode='min'
 )
-early_stop = EarlyStopping(
-    monitor='val_loss', patience=30, restore_best_weights=True
-)
 
 # ==================== 訓練模型 ====================
 history = model.fit(
@@ -79,7 +76,7 @@ history = model.fit(
     validation_data=(X_val, y_val),
     epochs=EPOCHS,
     batch_size=BATCH_SIZE,
-    callbacks=[checkpoint, early_stop],
+    callbacks=[checkpoint],
     verbose=1
 )
 
