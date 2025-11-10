@@ -20,7 +20,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 # === 超參數設定 ===
 MAX_SEQ_LEN = 200
 FEATURE_DIM = 51
-EPOCHS = 500
+EPOCHS = 300
 BATCH_SIZE = 32
 DROPOUT_RATE = 0.3
 MODEL_NAME = 'A3'
