@@ -14,7 +14,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 # ==================== 基本參數設定 ====================
 DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
-MODEL_DIR = 'B3'
+MODEL_DIR = 'A3'
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # === 超參數設定 ===
@@ -23,7 +23,7 @@ FEATURE_DIM = 51
 EPOCHS = 500
 BATCH_SIZE = 32
 DROPOUT_RATE = 0.3
-MODEL_NAME = 'B3'
+MODEL_NAME = 'A3'
 
 # ==================== 讀取資料 ====================
 df = pd.read_csv(LABEL_CSV)
@@ -55,9 +55,12 @@ print(f"資料集比例：Train={len(X_train)}, Val={len(X_val)}, Test={len(X_te
 # ==================== 模型架構 ====================
 model = Sequential([
     Masking(mask_value=0.0, input_shape=(MAX_SEQ_LEN, FEATURE_DIM)),
-    LSTM(64, return_sequences=True),
+
+    LSTM(128, return_sequences=True),
     Dropout(DROPOUT_RATE),
-    LSTM(32),
+
+    LSTM(64),
+
     Dense(32, activation='relu'),
     Dense(1, activation='sigmoid')
 ])
