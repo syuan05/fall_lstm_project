@@ -14,16 +14,16 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 # ==================== 基本參數設定 ====================
 DATA_DIR = 'data'
 LABEL_CSV = os.path.join(DATA_DIR, 'labels.csv')
-MODEL_DIR = 'B1'
+MODEL_DIR = 'B3'
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # === 超參數設定 ===
 MAX_SEQ_LEN = 200
 FEATURE_DIM = 51
-EPOCHS = 100
+EPOCHS = 500
 BATCH_SIZE = 32
 DROPOUT_RATE = 0.3
-MODEL_NAME = 'B1'
+MODEL_NAME = 'B3'
 
 # ==================== 讀取資料 ====================
 df = pd.read_csv(LABEL_CSV)
